@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kandidáti — komunální volby 2026</title>
+<style>
+  :root{
+    --paper:#f2efe6;
+    --paper-2:#eae5d6;
+    --ink:#1c1b16;
+    --ink-soft:#5b5848;
+    --line:#c9c2ab;
+    --red:#b3122b;
+    --red-soft:#f3dcdf;
+    --green:#3c5a44;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+    --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    background-image:
+      linear-gradient(var(--paper-2) 1px, transparent 1px);
+    background-size: 100% 32px;
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:15px;
+    line-height:1.45;
+  }
+  a{color:var(--red);}
+
+  header.top{
+    padding:22px 24px 16px;
+    border-bottom:3px double var(--ink);
+    background:var(--paper);
+  }
+  header.top .eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:6px;
+  }
+  header.top h1{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:clamp(24px,4vw,34px);
+    margin:6px 0 4px;
+    letter-spacing:-0.01em;
+  }
+  header.top .sub{
+    font-size:13px;
+    color:var(--ink-soft);
+    max-width:760px;
+  }
+
+  .layout{
+    display:grid;
+    grid-template-columns: 320px 1fr;
+    gap:0;
+    align-items:start;
+  }
+  @media (max-width: 860px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .panel{
+    padding:20px;
+    border-right:1px solid var(--line);
+    position:sticky;
+    top:0;
+    align-self:start;
+    max-height:100vh;
+    overflow:auto;
+  }
+  @media (max-width: 860px){
+    .panel{position:static;border-right:none;border-bottom:3px double var(--ink);max-height:none;}
+  }
+
+  .field{margin-bottom:16px;}
+  .field label{
+    display:block;
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:5px;
+  }
+  .field input[type=text], .field input[type=number]{
+    width:100%;
+    padding:9px 10px;
+    border:1px solid var(--ink);
+    background:#fff;
+    font-family:var(--sans);
+    font-size:14.5px;
+    color:var(--ink);
+    border-radius:0;
+  }
+  .field input:focus{
+    outline:2px solid var(--red);
+    outline-offset:-1px;
+  }
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+
+  .obec-result-list{
+    border:1px solid var(--ink);
+    border-top:none;
+    max-height:260px;
+    overflow:auto;
+    background:#fff;
+    margin-top:-1px;
+  }
+  .obec-result-list div{
+    padding:7px 10px;
+    cursor:pointer;
+    font-size:13.5px;
+    border-bottom:1px solid #e7e2d2;
+  }
+  .obec-result-list div:hover{background:var(--red-soft);}
+  .obec-result-list .okres{color:var(--ink-soft);font-size:11.5px;}
+
+  .chip-selected{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#fff;
+    border:1px solid var(--ink);
+    padding:8px 10px;
+    font-size:14px;
+    margin-top:6px;
+  }
+  .chip-selected button{
+    background:none;border:none;color:var(--red);cursor:pointer;font-size:16px;line-height:1;
+    font-family:var(--mono);
+  }
+
+  .checkline{display:flex;align-items:center;gap:8px;font-size:13.5px;margin-top:2px;}
+
+  .btn-clear{
+    width:100%;
+    padding:9px;
+    background:var(--ink);
+    color:var(--paper);
+    border:none;
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    cursor:pointer;
+    margin-top:6px;
+  }
+  .btn-clear:hover{background:var(--red);}
+
+  main{padding:22px 26px 60px;min-width:0;}
+
+  .stats-strip{
+    display:flex;gap:22px;flex-wrap:wrap;
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+    padding-bottom:14px;
+    border-bottom:1px solid var(--line);
+  }
+  .stats-strip b{color:var(--ink);font-size:15px;font-family:var(--sans);}
+
+  .empty-state{
+    max-width:560px;
+    padding:30px 0;
+  }
+  .empty-state h2{font-family:var(--serif);font-size:22px;margin:0 0 10px;}
+  .empty-state p{color:var(--ink-soft);font-size:14px;}
+  .empty-state ul{padding-left:18px;color:var(--ink-soft);font-size:14px;}
+
+  .unit-card{
+    border:1px solid var(--ink);
+    background:#fff;
+    margin-bottom:26px;
+  }
+  .unit-header{
+    padding:14px 18px;
+    border-bottom:3px double var(--ink);
+    background:linear-gradient(180deg,#fff,#fbf9f3);
+  }
+  .unit-header .name{
+    font-family:var(--serif);
+    font-weight:700;
+    font-size:22px;
+  }
+  .unit-header .meta{
+    font-family:var(--mono);
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:4px;
+    text-transform:uppercase;
+    letter-spacing:.04em;
+  }
+  .unit-header .parts{
+    font-size:12.5px;
+    color:var(--ink-soft);
+    margin-top:6px;
+    font-style:italic;
+  }
+
+  .party-block{
+    border-bottom:1px solid var(--line);
+    padding:14px 18px 6px;
+  }
+  .party-block:last-child{border-bottom:none;}
+  .party-block.flash{animation:flash 1.6s ease;}
+  @keyframes flash{0%{background:var(--red-soft);}100%{background:transparent;}}
+
+  .party-title{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+    font-weight:700;
+    font-size:16px;
+    margin-bottom:8px;
+  }
+  .party-title .full{
+    font-weight:400;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+
+  .cand-row{
+    display:grid;
+    grid-template-columns: 26px 20px 1fr auto;
+    gap:10px;
+    align-items:baseline;
+    padding:5px 0;
+    border-bottom:1px dashed #e5e0cf;
+    font-size:13.8px;
+  }
+  .cand-row:last-child{border-bottom:none;}
+  .cand-row .num{
+    font-family:var(--mono);
+    color:var(--ink-soft);
+    text-align:right;
+  }
+  .cand-row .box{
+    width:13px;height:13px;border:1.3px solid var(--ink);display:inline-block;margin-top:2px;
+  }
+  .cand-row .who b{font-weight:700;}
+  .cand-row .who .cancelled{color:var(--red);font-size:11.5px;font-family:var(--mono);text-transform:uppercase;margin-left:6px;}
+  .cand-row .sub{color:var(--ink-soft);font-size:12.3px;}
+  .cand-row .right{
+    font-size:12px;color:var(--ink-soft);text-align:right;white-space:nowrap;
+  }
+
+  .global-row{
+    display:grid;
+    grid-template-columns: 1fr auto;
+    gap:10px;
+    padding:10px 14px;
+    border:1px solid var(--line);
+    background:#fff;
+    margin-bottom:8px;
+    align-items:center;
+  }
+  .global-row .who{font-size:14px;}
+  .global-row .who b{font-weight:700;}
+  .global-row .meta{font-size:12px;color:var(--ink-soft);margin-top:2px;}
+  .global-row .goto{
+    font-family:var(--mono);
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.05em;
+    background:none;
+    border:1px solid var(--ink);
+    padding:6px 10px;
+    cursor:pointer;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+  .global-row .goto:hover{background:var(--ink);color:var(--paper);}
+
+  .more-note{
+    font-family:var(--mono);
+    font-size:12px;
+    color:var(--ink-soft);
+    padding:10px 2px;
+  }
+
+  footer.foot{
+    padding:20px 24px 40px;
+    color:var(--ink-soft);
+    font-size:11.5px;
+    font-family:var(--mono);
+    border-top:1px solid var(--line);
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="eyebrow">
+    <span>Komunální volby 2026 · Česká republika</span>
+    <span id="loadStatus">načítám data…</span>
+  </div>
+  <h1>Kandidátky obcí</h1>
+  <div class="sub">Registr kandidátů pro volby do zastupitelstev obcí — otevřená data ČSÚ, stav k 26. 8. 2026. Toto jsou <b>kandidátní listiny před volbami</b>, nikoli výsledky hlasování.</div>
+</header>
+
+<div class="layout">
+  <div class="panel">
+
+    <div class="field">
+      <label for="obecInput">Obec</label>
+      <input type="text" id="obecInput" placeholder="např. Kladno, Lišov…" autocomplete="off">
+      <div class="obec-result-list" id="obecResults" style="display:none;"></div>
+      <div id="obecSelected"></div>
+    </div>
+
+    <div class="field">
+      <label for="stranaInput">Strana / hnutí / uskupení</label>
+      <input type="text" id="stranaInput" placeholder="např. ODS, Nezávislí…" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="jmenoInput">Jméno nebo příjmení</label>
+      <input type="text" id="jmenoInput" placeholder="např. Novák, Petra…" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label for="povolaniInput">Povolání obsahuje</label>
+      <input type="text" id="povolaniInput" placeholder="např. učitel, starosta…" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label>Věk</label>
+      <div class="row2">
+        <input type="number" id="vekMin" placeholder="od" min="18" max="110">
+        <input type="number" id="vekMax" placeholder="do" min="18" max="110">
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="checkline">
+        <input type="checkbox" id="platniOnly">
+        <label style="margin:0;text-transform:none;font-family:var(--sans);font-size:13.5px;letter-spacing:0;" for="platniOnly">Skrýt zrušené kandidatury</label>
+      </div>
+    </div>
+
+    <button class="btn-clear" id="clearBtn">Vymazat filtry</button>
+  </div>
+
+  <main>
+    <div class="stats-strip" id="statsStrip"></div>
+    <div id="results"></div>
+  </main>
+</div>
+
+<footer class="foot">
+  Zdroj dat: Český statistický úřad — otevřená data pro volby do zastupitelstev obcí 2026 (volby.gov.cz/opendata). Zpracováno lokálně, bez odesílání dat na server.
+</footer>
+
+<script src="volby_data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
