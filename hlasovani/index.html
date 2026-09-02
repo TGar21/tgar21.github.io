@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plánovač Termínů | Bez Reklam</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .calendar-day.selected { @apply bg-blue-500 text-white; }
+        .calendar-day.today { @apply border-2 border-blue-500; }
+        .vote-btn { @apply w-8 h-8 rounded-full border transition-all; }
+        .state-gray { background-color: #e5e7eb; }
+        .state-green { background-color: #22c55e; }
+        .state-yellow { background-color: #eab308; }
+        .state-red { background-color: #ef4444; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen font-sans">
+
+<div id="app" class="max-w-4xl mx-auto p-4 md:p-8">
+    <!-- Header -->
+    <header class="mb-10 text-center">
+        <h1 class="text-3xl font-bold text-slate-800">Vytvořit hlasování</h1>
+        <p class="text-slate-500">Vyberte dny a časy, které vám vyhovují.</p>
+    </header>
+
+    <div class="grid md:grid-cols-2 gap-8">
+        <!-- Levý sloupec: Kalendář -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="monthLabel" class="font-semibold text-lg">Měsíc Rok</h2>
+                <div class="flex gap-2">
+                    <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-lg"><i data-lucide="chevron-left"></i></button>
+                    <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-lg"><i data-lucide="chevron-right"></i></button>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-7 gap-1 text-center text-xs font-medium text-slate-400 mb-2">
+                <div>PO</div><div>ÚT</div><div>ST</div><div>ČT</div><div>PÁ</div><div>SO</div><div>NE</div>
+            </div>
+            <div id="calendarGrid" class="grid grid-cols-7 gap-1">
+                <!-- Kalendář se generuje JS -->
+            </div>
+        </div>
+
+        <!-- Pravý sloupec: Vybrané termíny -->
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 class="font-semibold text-lg mb-4">Vybrané termíny</h2>
+            <div id="selectedList" class="space-y-3">
+                <p class="text-slate-400 text-sm italic">Zatím nebyly vybrány žádné dny kliknutím v kalendáři.</p>
+            </div>
+            
+            <button id="generateBtn" class="w-full mt-6 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-200 hidden">
+                Vytvořit unikátní odkaz
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // --- STAV APLIKACE ---
+    let currentMonth = new Date();
+    let selectedDates = []; // { date: "YYYY-MM-DD", times: [] }
+
+    // --- KALENDÁŘ ---
+    function renderCalendar() {
+        const grid = document.getElementById('calendarGrid');
+        const label = document.getElementById('monthLabel');
+        grid.innerHTML = '';
+        
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth();
+        label.innerText = new Intl.DateTimeFormat('cs-CZ', { month: 'long', year: 'numeric' }).format(currentMonth);
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const offset = firstDay === 0 ? 6 : firstDay - 1;
+
+        // Prázdná políčka před začátkem měsíce
+        for (let i = 0; i < offset; i++) {
+            grid.innerHTML += `<div></div>`;
+        }
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const isSelected = selectedDates.some(d => d.date === dateStr);
+            
+            grid.innerHTML += `
+                <button onclick="toggleDate('${dateStr}')" 
+                    class="calendar-day p-3 rounded-lg text-sm hover:bg-blue-50 transition-colors ${isSelected ? 'bg-blue-500 text-white' : ''}">
+                    ${day}
+                </button>
+            `;
+        }
+    }
+
+    function changeMonth(step) {
+        currentMonth.setMonth(currentMonth.getMonth() + step);
+        renderCalendar();
+    }
+
+    // --- LOGIKA TERMÍNŮ ---
+    function toggleDate(dateStr) {
+        const index = selectedDates.findIndex(d => d.date === dateStr);
+        if (index > -1) {
+            selectedDates.splice(index, 1);
+        } else {
+            selectedDates.push({ date: dateStr, times: [] });
+        }
+        renderCalendar();
+        renderSelectedList();
+    }
+
+    function addTime(dateStr) {
+        const dateObj = selectedDates.find(d => d.date === dateStr);
+        const time = prompt("Zadejte čas (např. 18:00 nebo Večer):");
+        if (time) {
+            dateObj.times.push(time);
+            renderSelectedList();
+        }
+    }
+
+    function removeTime(dateStr, timeIndex) {
+        const dateObj = selectedDates.find(d => d.date === dateStr);
+        dateObj.times.splice(timeIndex, 1);
+        renderSelectedList();
+    }
+
+    function renderSelectedList() {
+        const list = document.getElementById('selectedList');
+        const genBtn = document.getElementById('generateBtn');
+        
+        if (selectedDates.length === 0) {
+            list.innerHTML = '<p class="text-slate-400 text-sm italic">Zatím nebyly vybrány žádné dny.</p>';
+            genBtn.classList.add('hidden');
+            return;
+        }
+
+        genBtn.classList.remove('hidden');
+        list.innerHTML = selectedDates.sort((a,b) => a.date.localeCompare(b.date)).map(d => `
+            <div class="border-b border-slate-100 pb-3 last:border-0">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="font-medium">${new Date(d.date).toLocaleDateString('cs-CZ')}</span>
+                    <button onclick="toggleDate('${d.date}')" class="text-red-400 hover:text-red-600"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+                </div>
+                <div class="flex flex-wrap gap-2 items-center">
+                    ${d.times.map((t, idx) => `
+                        <span class="bg-slate-100 px-2 py-1 rounded text-xs flex items-center gap-1">
+                            ${t} 
+                            <button onclick="removeTime('${d.date}', ${idx})" class="text-slate-400">×</button>
+                        </span>
+                    `).join('')}
+                    <button onclick="addTime('${d.date}')" class="text-xs text-blue-500 font-semibold hover:underline text-left">+ Přidat čas / upřesnění</button>
+                </div>
+            </div>
+        `).join('');
+        lucide.createIcons();
+    }
+
+    // Inicializace
+    renderCalendar();
+    lucide.createIcons();
+</script>
+</body>
+</html>
