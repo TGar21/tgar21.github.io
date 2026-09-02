@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rozcestník složek</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: #f8f9fa;
+            color: #333;
+            padding: 2rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 2rem;
+        }
+        .folder-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .folder-link {
+            display: block;
+            padding: 16px 20px;
+            background: white;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #007bff;
+            font-weight: 600;
+            font-size: 1.1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #e9ecef;
+        }
+        .folder-link:hover {
+            background: #007bff;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.2);
+        }
+        .folder-link::before {
+            content: "📁 ";
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Můj rozcestník</h1>
+
+    <div class="folder-list">
+        <a href="volby/" class="folder-link">Volby: prehled kandidatu</a>
+        <a href="hlasovani/" class="folder-link">Hlasovani</a>
+    </div>
+
+</body>
+</html>
