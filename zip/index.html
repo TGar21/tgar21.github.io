@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zaheslovat ZIP pro pacienta</title>
+    <!-- Použití zip.js knihovny, která umí zapisovat šifrovaný ZIP -->
+    <script src="https://unpkg.com/@zip.js/zip.js@2.7.34/dist/zip.min.js"></script>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; max-width: 500px; margin: 40px auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input[type="file"], input[type="password"] { width: 100%; padding: 8px; box-sizing: border-box; }
+        button { background: #0066cc; color: white; border: none; padding: 10px 15px; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; }
+        button:hover { background: #0052a3; }
+        #status { margin-top: 15px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <h2>Vytvořit zaheslovaný ZIP pro pacienta</h2>
+    
+    <div class="form-group">
+        <label for="fileInput">Vyber soubor:</label>
+        <input type="file" id="fileInput">
+    </div>
+
+    <div class="form-group">
+        <label for="passwordInput">Zadej heslo:</label>
+        <input type="password" id="passwordInput" placeholder="Heslo pro pacienta">
+    </div>
+
+    <button onclick="createZip()">Zabalit do ZIP a stáhnout</button>
+
+    <div id="status"></div>
+
+    <script>
+        async function createZip() {
+            const fileInput = document.getElementById('fileInput');
+            const passwordInput = document.getElementById('passwordInput');
+            const status = document.getElementById('status');
+
+            if (!fileInput.files.length) {
+                alert('Prosím vyber soubor!');
+                return;
+            }
+            if (!passwordInput.value) {
+                alert('Prosím zadej heslo!');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const password = passwordInput.value;
+
+            status.style.color = 'black';
+            status.innerText = 'Zpracovávám...';
+
+            try {
+                // Vytvoření ZIPu v paměti
+                const zipWriter = new zip.ZipWriter(new zip.BlobWriter("application/zip"));
+
+                // Přidání souboru s heslem a použitím ZipCrypto (Standard / Traditional encryption)
+                // DŮLEŽITÉ: ZipCrypto je nutné pro kompatibilitu s Průzkumníkem ve Windows!
+                await zipWriter.add(file.name, new zip.BlobReader(file), {
+                    password: password,
+                    encryptionMethod: "zipCrypto" 
+                });
+
+                // Vygenerování výsledného Blobu
+                const blob = await zipWriter.close();
+
+                // Vyvolání stažení
+                const link = document.createElement("a");
+                link.href = URL.createObjectURL(blob);
+                link.download = file.name.split('.')[0] + ".zip";
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                status.style.color = 'green';
+                status.innerText = 'Hotovo! Zaheslovaný ZIP byl stažen.';
+                
+                // Promazání hesla z formuláře
+                passwordInput.value = '';
+                fileInput.value = '';
+
+            } catch (err) {
+                console.error(err);
+                status.style.color = 'red';
+                status.innerText = 'Chyba při vytváření ZIPu: ' + err.message;
+            }
+        }
+    </script>
+</body>
+</html>
