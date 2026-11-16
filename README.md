@@ -1,2 +1,4 @@
 volby
+zip
+umeni
 hlasovani
